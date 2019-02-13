@@ -10,8 +10,12 @@
 </head>
 <body style="font-size:20px; padding:50px;">
     <!-- Add EJS code here -->
-    <% include partials/_header.ejs %>
-    <%= shortURL %>
-    <%= longURL %>
-</body>
+    <h1>shortUrl: <%= shortURL %> </h1>
+    <form method="POST" action="/urls/<%= shortURL %>" >
+      
+      <input class="form-control" type="text" name="longURL" placeholder= <%= longURL %> style="width: 300px; margin: 1em">
+      <input type="submit" value= "update">
+      
+    </form>
+  </body>
 </html>

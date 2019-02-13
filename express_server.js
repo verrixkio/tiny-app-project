@@ -37,13 +37,21 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+
 app.get("/u/:shortURL", (req, res) => {
-  
   let actualDirect = urlDatabase[req.params.shortURL]
   console.log(actualDirect)
   res.redirect(actualDirect);
 
   
+});
+app.post("/urls/:shortURL", (req, res) => {
+  let shortU = req.params.shortURL
+  urlDatabase[shortU] = req.body.longURL
+  
+  //Update the urldatabase to correct for the input
+  
+  res.redirect('/urls');
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -52,8 +60,6 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  //console.log(req.body);  // Log the POST request body to the console
-          // Respond with 'Ok' (we will replace this)
   //Generate our random id
   var randomString = generateRandomString();
   //Add our key value pair to our urlDatabase
