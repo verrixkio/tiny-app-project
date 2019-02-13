@@ -43,19 +43,33 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  //console.log(req.body);  // Log the POST request body to the console
+          // Respond with 'Ok' (we will replace this)
+  //Generate our random id
+  var randomString = generateRandomString();
+  //Add our key value pair to our urlDatabase
+  urlDatabase[randomString] = req.body.longURL
+  //Acquire Target Url
+  var targetUrl = "/urls/" + randomString
+  res.redirect(targetUrl);
+  
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  
+  actualDirect = urlDatabase[req.params.shortURL]
+  res.redirect(actualDirect);
+
+  
+});
 
 function generateRandomString() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var randomId = "";
+  var possibleOptions = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+  //Create a random character using our possible options 
   for (var i = 0; i < 6; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+    randomId += possibleOptions.charAt(Math.floor(Math.random() * possibleOptions.length));
 
-  return text;
+  return randomId;
 }
-
-console.log(generateRandomString());
