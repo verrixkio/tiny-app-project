@@ -10,7 +10,10 @@
 </head>
 <body style="font-size:20px; padding:50px;">
     <!-- Add EJS code here -->
-    <%= shortURL %>
-    <%= longURL %>
+    <% include partials/_header.ejs %>
+    <ul>
+      <%= shortURL %>
+      <%= longURL %> 
+    </ul>
 </body>
 </html>

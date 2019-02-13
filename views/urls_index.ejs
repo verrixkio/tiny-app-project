@@ -10,9 +10,20 @@
 </head>
 <body style="font-size:20px; padding:50px;">
     <!-- Add EJS code here -->
+    <% include partials/_header.ejs %>
+    <a href="url">Create a Link</a>
+    <br>
+    <br>
+    <h4>My URL's</h4>
+    
     <% for (var keys in urls) { %>
-      <h1><%= urls[keys] %></h1>
-      <h1><%= keys %></h1>
+      <ul>
+        <li><%= keys %>
+        <%= urls[keys] %></li>
+      </ul>
       <% } %>
+      
+        
+      
 </body>
 </html>
