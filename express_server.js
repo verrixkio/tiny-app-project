@@ -37,6 +37,15 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  
+  let actualDirect = urlDatabase[req.params.shortURL]
+  console.log(actualDirect)
+  res.redirect(actualDirect);
+
+  
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
@@ -54,14 +63,16 @@ app.post("/urls", (req, res) => {
   res.redirect(targetUrl);
   
 });
-
-app.get("/u/:shortURL", (req, res) => {
-  
-  actualDirect = urlDatabase[req.params.shortURL]
-  res.redirect(actualDirect);
-
-  
+//Delete Function via click and redirect
+app.post("/urls/:shortURL/delete", (req, res) => {
+  let iD = (req.params.shortURL)
+  //Remove From Database
+  delete urlDatabase[iD]
+  //Redirect to Page
+  res.redirect("/urls")
 });
+
+
 
 function generateRandomString() {
   var randomId = "";

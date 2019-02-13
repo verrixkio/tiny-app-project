@@ -19,8 +19,14 @@
     <% for (var keys in urls) { %>
       <ul>
         <li><%= keys %>
-        <%= urls[keys] %></li>
+        <%= urls[keys] %>
+        <form method="POST" action="/urls/<%= keys %>/delete">
+          <input type="submit" value="Delete">
+        </form>
+        
+        
       </ul>
+      
       <% } %>
       
         
