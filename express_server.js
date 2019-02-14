@@ -4,6 +4,20 @@ var app = express();
 app.use(cookieParser())
 var PORT = 8080; // default port 8080
 
+//Object for users to work and test with.
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -57,6 +71,14 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect('/urls');
 });
 
+//Set up register Path
+app.get("/urls/register", (req, res) => {
+  //Lets see what we're posting.
+  console.log(req.params)
+  //let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
+  res.render("urls_register");
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
   res.render("urls_show", templateVars);
@@ -90,6 +112,8 @@ app.post("/logout", (req, res) => {
   res.clearCookie("username")
   res.redirect("/urls")
 });
+
+
 
 function generateRandomString() {
   var randomId = "";
