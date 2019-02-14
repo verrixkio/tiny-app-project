@@ -4,6 +4,8 @@ var app = express();
 app.use(cookieParser())
 var PORT = 8080; // default port 8080
 
+
+
 //Object for users to work and test with.
 const users = { 
   "userRandomID": {
@@ -18,12 +20,18 @@ const users = {
   }
 }
 
+
+
 //Body Parser for our requests
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+
+
 //Setting our server to route and call our ejs files in view.
 app.set("view engine", "ejs");
+
+
 
 
 //Set up register Path ********* w2d4
@@ -32,24 +40,30 @@ function checkLoggedEmail(req,res) {
   for (keys in users) {
     loggedUser = users[keys].email
     if (loggedUser === req.body.email) {
-      res.render('err_400')
+      return true;
+    } else {
+      return false;
     }   
   }
 }
 
+
+
+
 app.get("/register", (req, res) => {
-  //Lets see what we're posting.
   res.render("urls_register");
 });
+
+
 
 app.post("/register", (req, res) => {
   //Logic for if someone enters an email or password as an empty string.
   if (req.body.email === '' || req.body.passwod === '' ) {
     res.render('err_400')
-  }
+  } else if (checkLoggedEmail(req,res) === true){
+    res.render('err_400')
+  } else {
   //Check to see if the email matches another
-  checkLoggedEmail(req,res)
-
   //Add a new user to the global users object
   //Access the email
   let userEmail = req.body.email;
@@ -65,6 +79,11 @@ app.post("/register", (req, res) => {
   res.cookie("user_ID", newId);
   
   res.redirect("/urls");
+  }
+});
+
+app.get("/login", (req, res) => {
+  res.render("urls_login")
 });
 
 
@@ -149,8 +168,29 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username)
-  res.redirect("/urls")
+    //Logic for if someone enters an email or password as an empty string.
+    if (req.body.email === '' || req.body.passwod === '' ) {
+      res.render('err_400')
+    }
+    //Check to see if the email matches another
+    if (checkLoggedEmail(req,res) === true) {
+      res.render("err_400")
+    }
+  
+    //Add a new user to the global users object
+    //Access the email
+    let userEmail = req.body.email;
+    
+    //Access the password
+    let userPass = req.body.password;
+    
+    //Get a random number
+    let newId = generateRandomString();
+    
+    //Add these features to the users object
+    users[newId] = {id: newId, email: userEmail, password: userPass};
+    res.cookie("user_ID", newId);
+    res.redirect("/urls")
 });
 
 app.post("/logout", (req, res) => {
