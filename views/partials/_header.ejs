@@ -1,3 +1,15 @@
+<% if (username) { %>
+  <h1>TinyApp</h1>
+  <h4>Logged in as <%= username %></h4>
+  <section class="logoutform">
+      <form name="logout" action="/logout" method="POST" accept-charset="utf-8">
+          
+          <input type="submit" value="Logout">
+      </form>
+  </section>
+
+<%} else {%>
+
 <h1>TinyApp</h1>
 
 <section class="loginform">
@@ -6,3 +18,4 @@
         <input type="submit" value="Login">
     </form>
 </section>
+<%}%>
