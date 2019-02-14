@@ -47,20 +47,22 @@ app.post("/register", (req, res) => {
   if (req.body.email === '' || req.body.passwod === '' ) {
     res.render('err_400')
   }
+  //Check to see if the email matches another
   checkLoggedEmail(req,res)
 
   //Add a new user to the global users object
   //Access the email
   let userEmail = req.body.email;
+  
   //Access the password
   let userPass = req.body.password;
+  
   //Get a random number
   let newId = generateRandomString();
+  
   //Add these features to the users object
   users[newId] = {id: newId, email: userEmail, password: userPass};
-  res.cookie("username", newId);
-
-  
+  res.cookie("user_ID", newId);
   
   res.redirect("/urls");
 });
@@ -96,13 +98,13 @@ app.get("/hello", (req, res) => {
 
 // Setting up the main TinyUrl page and renders our urls_index.ejs page.
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
   res.render("urls_index", templateVars);
 });
 
 //Our new url page and renders urls_new.ejs
 app.get("/urls/new", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
   res.render("urls_new", templateVars);
 });
 
@@ -123,7 +125,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.cookies['user_ID']]};
   res.render("urls_show", templateVars);
 });
 

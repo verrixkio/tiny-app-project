@@ -1,6 +1,6 @@
-<% if (username) { %>
+<% if (uObject) { %>
   <h1>TinyApp</h1>
-  <h4>Logged in as <%= username %></h4>
+  <h4>Logged in as <%= uObject.email %></h4>
   <section class="logoutform">
       <form name="logout" action="/logout" method="POST" accept-charset="utf-8">
           
