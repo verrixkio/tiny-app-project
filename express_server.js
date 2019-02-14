@@ -28,12 +28,27 @@ app.set("view engine", "ejs");
 
 //Set up register Path ********* w2d4
 
+function checkLoggedEmail(req,res) {
+  for (keys in users) {
+    loggedUser = users[keys].email
+    if (loggedUser === req.body.email) {
+      res.render('err_400')
+    }   
+  }
+}
+
 app.get("/register", (req, res) => {
   //Lets see what we're posting.
   res.render("urls_register");
 });
 
 app.post("/register", (req, res) => {
+  //Logic for if someone enters an email or password as an empty string.
+  if (req.body.email === '' || req.body.passwod === '' ) {
+    res.render('err_400')
+  }
+  checkLoggedEmail(req,res)
+
   //Add a new user to the global users object
   //Access the email
   let userEmail = req.body.email;
@@ -44,6 +59,8 @@ app.post("/register", (req, res) => {
   //Add these features to the users object
   users[newId] = {id: newId, email: userEmail, password: userPass};
   res.cookie("username", newId);
+
+  
   
   res.redirect("/urls");
 });
