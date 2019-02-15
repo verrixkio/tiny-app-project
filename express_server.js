@@ -120,9 +120,9 @@ app.get("/login", (req, res) => {
 //****************
 
 //Initial Database for our urls and testing
-var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 //Main root page with hello
@@ -145,9 +145,33 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+
+// Function that checks which variables to return to the user
+function keepPrivateUrls (req) {
+  //get the user ID
+  let privateUrlDatabase = {}
+  checkID = req.cookies['user_ID']
+  //for each value of the current Urldatabase check the value and if it matches added to a database
+  for (keys in urlDatabase) {
+    let currentKey = urlDatabase[keys].userID
+    // console.log(currentKey, checkID)
+    // privateUrlDatabase[keys] = urlDatabase[keys]
+    // console.log(privateUrlDatabase)
+    if (currentKey === checkID) {
+      privateUrlDatabase[keys] = urlDatabase[keys] 
+    }
+  }
+  return privateUrlDatabase
+}
 // Setting up the main TinyUrl page and renders our urls_index.ejs page.
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
+  //Redirect if no Login
+  if (checkLogInState(req) === false ) {
+    res.redirect('/login')
+  }
+  //Need to check with user ID matches the login
+  let newDatabase = keepPrivateUrls(req)
+  let templateVars = { urls: newDatabase, uObject: users[req.cookies['user_ID']]};
   res.render("urls_index", templateVars);
 });
 
@@ -183,10 +207,12 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  
   //Generate our random id
   var randomString = generateRandomString();
+  console.log("test")
   //Add our key value pair to our urlDatabase
-  urlDatabase[randomString] = req.body.longURL
+  urlDatabase[randomString] = { longURL: req.body.longURL, userID: req.cookies['user_ID'] }
   //Acquire Target Url
   var targetUrl = "/urls/" + randomString
   res.redirect("/urls");
