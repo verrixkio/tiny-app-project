@@ -47,6 +47,17 @@ function checkLoggedEmail(req,res) {
   }
 }
 
+// Find id associated with the id passed in
+function getId(email) {
+  for (keys in users) {
+    let loggedEmail = users[keys].email
+    if (loggedEmail === email) {
+      return users[keys].id ;
+    } else {
+      return false;
+    }   
+  }
+}
 
 
 
@@ -167,30 +178,34 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls")
 });
 
+
+//********************************** WORKING HERE */
 app.post("/login", (req, res) => {
-    //Logic for if someone enters an email or password as an empty string.
-    if (req.body.email === '' || req.body.passwod === '' ) {
-      res.render('err_400')
+    //Check if an email can not be found return a response with a 403 status code.
+    let getEmail = req.body.email
+    
+    // If the email isnt found return 403
+    if (checkLoggedEmail(req,res)=== false) {
+      res.render('err_403')
     }
-    //Check to see if the email matches another
-    if (checkLoggedEmail(req,res) === true) {
-      res.render("err_400")
+    // if the checked email is found
+    if (checkLoggedEmail(req, res)=== true) {
+      
+      let currentPassword =req.body.password
+      //Check the passwords in the keys
+      let loggedPW = (users[keys].password)
+      if (loggedPW != req.body.password) {
+        res.render('err_403')
+        console.log('yep')
+      // If password matches find the id asscociated
+      
+      } else {
+          let setId = getId(getEmail);
+          res.cookie("user_ID", setId);
+          res.redirect('/urls')
+      }        
     }
   
-    //Add a new user to the global users object
-    //Access the email
-    let userEmail = req.body.email;
-    
-    //Access the password
-    let userPass = req.body.password;
-    
-    //Get a random number
-    let newId = generateRandomString();
-    
-    //Add these features to the users object
-    users[newId] = {id: newId, email: userEmail, password: userPass};
-    res.cookie("user_ID", newId);
-    res.redirect("/urls")
 });
 
 app.post("/logout", (req, res) => {
@@ -204,7 +219,7 @@ function generateRandomString() {
   var possibleOptions = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
   //Create a random character using our possible options 
-  for (var i = 0; i < 6; i++)
+  for (var i = 0; i < 6; i++) 
     randomId += possibleOptions.charAt(Math.floor(Math.random() * possibleOptions.length));
 
   return randomId;
