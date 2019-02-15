@@ -65,6 +65,15 @@ function getId(email) {
   return returnValue
 }
 
+function checkLogInState (req) {
+  loggedInState = req.cookies['user_ID']
+  if (loggedInState === undefined) {
+    return false
+  } else {
+    return true
+  }
+}
+
 
 
 app.get("/register", (req, res) => {
@@ -145,7 +154,12 @@ app.get("/urls", (req, res) => {
 //Our new url page and renders urls_new.ejs
 app.get("/urls/new", (req, res) => {
   let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
-  res.render("urls_new", templateVars);
+  //Check if user is logged in.
+  if (checkLogInState(req)) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // Short URL logic for proper redirects.
