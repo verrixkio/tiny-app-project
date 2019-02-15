@@ -163,6 +163,7 @@ function keepPrivateUrls (req) {
   }
   return privateUrlDatabase
 }
+
 // Setting up the main TinyUrl page and renders our urls_index.ejs page.
 app.get("/urls", (req, res) => {
   //Redirect if no Login
@@ -170,7 +171,7 @@ app.get("/urls", (req, res) => {
     res.redirect('/login')
   }
   //Need to check with user ID matches the userID, if it does run the urls that are associated with it.
-  var newDatabase = keepPrivateUrls(req)
+  let newDatabase = keepPrivateUrls(req)
   let templateVars = { urls: newDatabase, uObject: users[req.cookies['user_ID']]};
   res.render("urls_index", templateVars);
 });
@@ -188,15 +189,20 @@ app.get("/urls/new", (req, res) => {
 
 // Short URL logic for proper redirects.
 app.get("/u/:shortURL", (req, res) => {
-  let actualDirect = urlDatabase[req.params.shortURL]
+  // console.log(req)
+  let newDatabase = keepPrivateUrls(req)
+  console.log(urlDatabase)
+  let actualDirect = urlDatabase[req.params.shortURL].longURL
   res.redirect(actualDirect);
 });
 
 //add a shortURL ID to our urldatabase if we recieve the prompt.
 app.post("/urls/:shortURL", (req, res) => {
-  let shortU = req.params.shortURL
-  urlDatabase[shortU] = { longURL: req.body.longURL, userID: req.cookies['user_ID'] }
-  console.log(urlDatabase)
+  // Force a Log in to Edit the Urls
+  if (checkLogInState(req)) {
+    let shortU = req.params.shortURL
+    urlDatabase[shortU] = { longURL: req.body.longURL, userID: req.cookies['user_ID'] }  
+}
   
   //Update the urldatabase to correct for the input
   res.redirect('/urls');
@@ -204,7 +210,12 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.cookies['user_ID']]};
-  res.render("urls_show", templateVars);
+  if (checkLogInState(req)) {
+    res.render("urls_show", templateVars);
+  } else {
+  res.redirect("/login")
+  }
+  
 });
 
 app.post("/urls", (req, res) => {
@@ -222,8 +233,12 @@ app.post("/urls", (req, res) => {
 //Delete Function via click and redirect
 app.post("/urls/:shortURL/delete", (req, res) => {
   let iD = (req.params.shortURL)
+  // console.log(iD)
+  //Make sure the user is logged on before deleting.
+  if (checkLogInState(req)) {
   //Remove From Database
-  delete urlDatabase[iD]
+    delete urlDatabase[iD]
+  }
   //Redirect to Page
   res.redirect("/urls")
 });
