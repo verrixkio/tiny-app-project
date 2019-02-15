@@ -40,11 +40,14 @@ function checkLoggedEmail(req,res) {
   for (keys in users) {
     loggedUser = users[keys].email
     if (loggedUser === req.body.email) {
-      return true;
+      
+      returnValues = loggedUser;
+      return returnValues
     } else {
-      return false;
-    }   
+      returnValues = false 
+    }
   }
+  return returnValues
 }
 
 // Find id associated with the id passed in
@@ -52,17 +55,21 @@ function getId(email) {
   for (keys in users) {
     let loggedEmail = users[keys].email
     if (loggedEmail === email) {
-      return users[keys].id ;
+
+      returnValue = users[keys].id ;
+      return returnValue
     } else {
-      return false;
-    }   
+      returnValue = false 
+    } 
   }
+  return returnValue
 }
 
 
 
 app.get("/register", (req, res) => {
-  res.render("urls_register");
+  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
+  res.render("urls_register", templateVars);
 });
 
 
@@ -71,9 +78,10 @@ app.post("/register", (req, res) => {
   //Logic for if someone enters an email or password as an empty string.
   if (req.body.email === '' || req.body.passwod === '' ) {
     res.render('err_400')
-  } else if (checkLoggedEmail(req,res) === true){
+  } else if (checkLoggedEmail(req,res) === req.body.email){
     res.render('err_400')
   } else {
+  
   //Check to see if the email matches another
   //Add a new user to the global users object
   //Access the email
@@ -89,12 +97,14 @@ app.post("/register", (req, res) => {
   users[newId] = {id: newId, email: userEmail, password: userPass};
   res.cookie("user_ID", newId);
   
+  
   res.redirect("/urls");
   }
 });
 
 app.get("/login", (req, res) => {
-  res.render("urls_login")
+  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
+  res.render("urls_login", templateVars)
 });
 
 
@@ -141,7 +151,6 @@ app.get("/urls/new", (req, res) => {
 // Short URL logic for proper redirects.
 app.get("/u/:shortURL", (req, res) => {
   let actualDirect = urlDatabase[req.params.shortURL]
-  console.log(actualDirect)
   res.redirect(actualDirect);
 });
 
@@ -185,18 +194,17 @@ app.post("/login", (req, res) => {
     let getEmail = req.body.email
     
     // If the email isnt found return 403
-    if (checkLoggedEmail(req,res)=== false) {
+    if (checkLoggedEmail(req,res) === false) {
       res.render('err_403')
     }
     // if the checked email is found
-    if (checkLoggedEmail(req, res)=== true) {
-      
+    if (checkLoggedEmail(req,res) === req.body.email) {
       let currentPassword =req.body.password
       //Check the passwords in the keys
       let loggedPW = (users[keys].password)
       if (loggedPW != req.body.password) {
         res.render('err_403')
-        console.log('yep')
+        
       // If password matches find the id asscociated
       
       } else {
