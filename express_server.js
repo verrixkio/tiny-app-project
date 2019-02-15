@@ -169,8 +169,8 @@ app.get("/urls", (req, res) => {
   if (checkLogInState(req) === false ) {
     res.redirect('/login')
   }
-  //Need to check with user ID matches the login
-  let newDatabase = keepPrivateUrls(req)
+  //Need to check with user ID matches the userID, if it does run the urls that are associated with it.
+  var newDatabase = keepPrivateUrls(req)
   let templateVars = { urls: newDatabase, uObject: users[req.cookies['user_ID']]};
   res.render("urls_index", templateVars);
 });
@@ -195,7 +195,8 @@ app.get("/u/:shortURL", (req, res) => {
 //add a shortURL ID to our urldatabase if we recieve the prompt.
 app.post("/urls/:shortURL", (req, res) => {
   let shortU = req.params.shortURL
-  urlDatabase[shortU] = req.body.longURL
+  urlDatabase[shortU] = { longURL: req.body.longURL, userID: req.cookies['user_ID'] }
+  console.log(urlDatabase)
   
   //Update the urldatabase to correct for the input
   res.redirect('/urls');

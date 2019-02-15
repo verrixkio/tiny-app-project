@@ -16,16 +16,17 @@
     <br>
     <h4>My URL's</h4>
     
-    <% for (var keys in urls) { %>
+    <% for (var key in urls) { %>
       <ul>
-        <li><%= keys %>
-        <%= urls[keys] %>
-        <a href="/urls/<%= keys %>">Edit</a>
-        <form method="POST" action="/urls/<%= keys %>/delete">
-          <input type="submit" value="Delete">
+        <li><%= key %>
+    
+          <%= urls[key].longURL %>
+            <a href="/urls/<%= keys %>">Edit</a>
+            <form method="POST" action="/urls/<%= keys %>/delete">
+            <input type="submit" value="Delete">
          
         </form>
-        
+         
       </ul>
       
       <% } %>
