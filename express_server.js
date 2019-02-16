@@ -1,7 +1,15 @@
 var express = require("express");
-var cookieParser = require('cookie-parser')
+var cookieSession = require('cookie-session')
 var app = express();
-app.use(cookieParser())
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ["my_cookie_secrets"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
+
 var PORT = 8080; // default port 8080
 const bcrypt = require('bcrypt');
 
@@ -66,8 +74,9 @@ function getId(email) {
 }
 
 function checkLogInState (req) {
-  loggedInState = req.cookies['user_ID']
-  if (loggedInState === undefined) {
+  loggedInState = req.session.user_ID
+  console.log(loggedInState)  //Changed cookie
+  if (loggedInState === undefined || loggedInState === null) {
     return false
   } else {
     return true
@@ -77,7 +86,7 @@ function checkLogInState (req) {
 
 
 app.get("/register", (req, res) => {
-  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
+  let templateVars = { urls: urlDatabase, uObject: users[req.session.user_ID]}; //Changed cookie
   res.render("urls_register", templateVars);
 });
 
@@ -105,7 +114,7 @@ app.post("/register", (req, res) => {
   
   //Add these features to the users object
   users[newId] = {id: newId, email: userEmail, password: userPassCrpto};
-  res.cookie("user_ID", newId);
+  req.session.user_ID = newId //res.cookie("user_ID", newId);
   
   
   res.redirect("/urls");
@@ -113,7 +122,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
+  let templateVars = { urls: urlDatabase, uObject: users[req.session.user_ID]};
   res.render("urls_login", templateVars)
 });
 
@@ -151,7 +160,7 @@ app.get("/hello", (req, res) => {
 function keepPrivateUrls (req) {
   //get the user ID
   let privateUrlDatabase = {}
-  checkID = req.cookies['user_ID']
+  checkID = req.session.user_ID
   //for each value of the current Urldatabase check the value and if it matches added to a database
   for (keys in urlDatabase) {
     let currentKey = urlDatabase[keys].userID
@@ -170,16 +179,17 @@ app.get("/urls", (req, res) => {
   //Redirect if no Login
   if (checkLogInState(req) === false ) {
     res.redirect('/login')
-  }
+  } else {
   //Need to check with user ID matches the userID, if it does run the urls that are associated with it.
   let newDatabase = keepPrivateUrls(req)
-  let templateVars = { urls: newDatabase, uObject: users[req.cookies['user_ID']]};
+  let templateVars = { urls: newDatabase, uObject: users[req.session.user_ID]};
   res.render("urls_index", templateVars);
+  }
 });
 
 //Our new url page and renders urls_new.ejs
 app.get("/urls/new", (req, res) => {
-  let templateVars = { urls: urlDatabase, uObject: users[req.cookies['user_ID']]};
+  let templateVars = { urls: urlDatabase, uObject: users[req.session.user_ID]};
   //Check if user is logged in.
   if (checkLogInState(req)) {
     res.render("urls_new", templateVars);
@@ -202,7 +212,7 @@ app.post("/urls/:shortURL", (req, res) => {
   // Force a Log in to Edit the Urls
   if (checkLogInState(req)) {
     let shortU = req.params.shortURL
-    urlDatabase[shortU] = { longURL: req.body.longURL, userID: req.cookies['user_ID'] }  
+    urlDatabase[shortU] = { longURL: req.body.longURL, userID: req.session.user_ID }  
 }
   
   //Update the urldatabase to correct for the input
@@ -210,7 +220,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.cookies['user_ID']]};
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.session.user_ID]};
   if (checkLogInState(req)) {
     res.render("urls_show", templateVars);
   } else {
@@ -225,7 +235,7 @@ app.post("/urls", (req, res) => {
   var randomString = generateRandomString();
   console.log("test")
   //Add our key value pair to our urlDatabase
-  urlDatabase[randomString] = { longURL: req.body.longURL, userID: req.cookies['user_ID'] }
+  urlDatabase[randomString] = { longURL: req.body.longURL, userID: req.session.user_ID }
   //Acquire Target Url
   var targetUrl = "/urls/" + randomString
   res.redirect("/urls");
@@ -266,7 +276,7 @@ app.post("/login", (req, res) => {
       
       } else {
           let setId = getId(getEmail);
-          res.cookie("user_ID", setId);
+          req.session.user_ID = setId
           res.redirect('/urls')
       }        
     }
@@ -274,7 +284,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_ID")
+  req.session.user_ID = null
   res.redirect("/login")
 });
 
