@@ -58,6 +58,7 @@ function checkLoggedEmail(req,res) {
   return returnValues
 }
 
+
 // Find id associated with the id passed in
 function getId(email) {
   for (keys in users) {
@@ -75,7 +76,7 @@ function getId(email) {
 
 function checkLogInState (req) {
   loggedInState = req.session.user_ID
-  console.log(loggedInState)  //Changed cookie
+  //Changed cookie
   if (loggedInState === undefined || loggedInState === null) {
     return false
   } else {
@@ -86,6 +87,10 @@ function checkLogInState (req) {
 
 
 app.get("/register", (req, res) => {
+  if (checkLogInState(req)) {
+    res.redirect('/urls')
+  }
+  
   let templateVars = { urls: urlDatabase, uObject: users[req.session.user_ID]}; //Changed cookie
   res.render("urls_register", templateVars);
 });
@@ -122,6 +127,9 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
+  if (checkLogInState(req)) {
+    res.redirect("/urls")
+  }
   let templateVars = { urls: urlDatabase, uObject: users[req.session.user_ID]};
   res.render("urls_login", templateVars)
 });
@@ -137,7 +145,11 @@ const urlDatabase = {
 
 //Main root page with hello
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (checkLogInState(req)) {
+    res.redirect("/urls")
+  } else {
+    res.redirect("/login")
+  }
 });
 
 //Set up our server to listen for prompts
@@ -164,9 +176,6 @@ function keepPrivateUrls (req) {
   //for each value of the current Urldatabase check the value and if it matches added to a database
   for (keys in urlDatabase) {
     let currentKey = urlDatabase[keys].userID
-    // console.log(currentKey, checkID)
-    // privateUrlDatabase[keys] = urlDatabase[keys]
-    // console.log(privateUrlDatabase)
     if (currentKey === checkID) {
       privateUrlDatabase[keys] = urlDatabase[keys] 
     }
@@ -178,7 +187,8 @@ function keepPrivateUrls (req) {
 app.get("/urls", (req, res) => {
   //Redirect if no Login
   if (checkLogInState(req) === false ) {
-    res.redirect('/login')
+
+    res.render('err_404')
   } else {
   //Need to check with user ID matches the userID, if it does run the urls that are associated with it.
   let newDatabase = keepPrivateUrls(req)
@@ -190,7 +200,7 @@ app.get("/urls", (req, res) => {
 //Our new url page and renders urls_new.ejs
 app.get("/urls/new", (req, res) => {
   let templateVars = { urls: urlDatabase, uObject: users[req.session.user_ID]};
-  //Check if user is logged in.
+  //Check if user is logged in and that the database is theirs.
   if (checkLogInState(req)) {
     res.render("urls_new", templateVars);
   } else {
@@ -202,7 +212,6 @@ app.get("/urls/new", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   // console.log(req)
   let newDatabase = keepPrivateUrls(req)
-  console.log(urlDatabase)
   let actualDirect = urlDatabase[req.params.shortURL].longURL
   res.redirect(actualDirect);
 });
@@ -220,11 +229,22 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  console.log(req.params.shortURL)
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    res.render('err_403')
+  } else if (checkLogInState(req) === false) {
+    res.render("err_404");
+  }
+  
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.session.user_ID]};
-  if (checkLogInState(req)) {
+  let checkID = templateVars['longURL'].userID
+  let checkCookie = templateVars['uObject'].id
+
+  //Check if user is logged in and that the database is theirs.
+  if (checkLogInState(req) && checkID === checkCookie) {
     res.render("urls_show", templateVars);
-  } else {
-  res.redirect("/login")
+  } else if(checkID !== checkCookie) {
+    res.render('err_404')
   }
   
 });
@@ -241,15 +261,38 @@ app.post("/urls", (req, res) => {
   res.redirect("/urls");
   
 });
+
+app.get("/urls/:shortURL/delete", (req, res) => {
+  if (checkLogInState(req) === false) {
+    res.render('err_404')
+  }
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.session.user_ID]};
+  let checkID = templateVars['longURL'].userID
+  let checkCookie = templateVars['uObject'].id
+  console.log(checkCookie, checkID)
+  if (checkLogInState(req) && checkID === checkCookie) {
+    delete urlDatabase[req.params.shortURL]
+    console.log('deleted succesful!')
+    res.redirect('/urls')
+  } else if (checkID !== checkCookie) {
+    res.render('err_404')
+  }
+});
+
 //Delete Function via click and redirect
 app.post("/urls/:shortURL/delete", (req, res) => {
-  let iD = (req.params.shortURL)
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], uObject: users[req.session.user_ID]};
+  let checkID = templateVars['longURL'].userID
+  let checkCookie = templateVars['uObject'].id
+  
   // console.log(iD)
   //Make sure the user is logged on before deleting.
-  if (checkLogInState(req)) {
+  if (checkLogInState(req) && checkCookie === checkID) {
   //Remove From Database
-    delete urlDatabase[iD]
-  }
+    delete urlDatabase[req.params.shortURL]
+    console.log('deleted succesful!')
+  } else if (checkID !== checkCookie)
+    res.render('err_404')
   //Redirect to Page
   res.redirect("/urls")
 });
@@ -262,7 +305,7 @@ app.post("/login", (req, res) => {
     
     // If the email isnt found return 403
     if (checkLoggedEmail(req,res) === false) {
-      res.render('err_403')
+      res.render('err_404')
     }
     // if the checked email is found
     if (checkLoggedEmail(req,res) === req.body.email) {
@@ -270,7 +313,7 @@ app.post("/login", (req, res) => {
       //Check the passwords in the keys
       let loggedPW = (users[keys].password)
       if (bcrypt.compareSync(loggedPW, req.body.password)) {
-        res.render('err_403')
+        res.render('err_404')
         
       // If password matches find the id asscociated
       
@@ -285,6 +328,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session.user_ID = null
+  // I know this is supposed to redirect back to urls but it seeems wierd to logout to get an error.
   res.redirect("/login")
 });
 
